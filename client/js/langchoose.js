@@ -1,4 +1,6 @@
-// Detect language and automatically fill in channel
+// Automatically select default channel by determining user's browser language
+// Additionally generate a random Chat_Guest nickname
+// ScoutLink TechTeam - techteam@scoutlink.net
 
 window.onload = function()
         {
@@ -67,6 +69,12 @@ window.onload = function()
                 channel = "#international";
         }
 
+// Choose a random nick
+document.getElementById('connect:nick').value = 'Chat_Guest_' + Math.floor((Math.random() * 99999) + 9999);
+
+// Output channel to dropdown
 document.getElementById("connect:channels").value = channel;
+
+
 
         }
