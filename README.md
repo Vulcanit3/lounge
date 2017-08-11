@@ -6,6 +6,8 @@ To learn more about configuration, usage and features of The Lounge, take a look
 
 This a reference repository containing changes which have been made for [the ScoutLink webchat](https://webchat.scoutlink.net). For more information about ScoutLink and Jamboree On The Internet see https://scoutlink.net.
 
+All modifications are credited to ScoutLink TechTeam.
+
 <p align="center">
 	<img src="https://user-images.githubusercontent.com/8675906/28143204-53116e8c-6719-11e7-992b-d1ba442c6c37.png" width="550">
 </p>
