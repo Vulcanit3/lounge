@@ -7,7 +7,6 @@
 
 	<link rel="preload" as="script" href="js/bundle.vendor.js">
 	<link rel="preload" as="script" href="js/bundle.js">
-	<script src="js/langchoose.js"></script>
 	<link rel="stylesheet" href="css/bootstrap.css">
 	<link rel="stylesheet" href="css/style.css">
 	<link id="theme" rel="stylesheet" href="{{ theme }}">
@@ -27,6 +26,83 @@
 
 	</head>
 	<body class="signed-out {{#if public}}public{{/if}}" data-transports="{{tojson transports}}">
+<script type="text/javascript">
+
+// Detect language and automatically fill in channel
+// Derived from langchooser kiwi plugin, orginally created by ScoutLink Techteam 2013
+
+window.onload = function()
+        {
+
+        var languageStr = window.navigator.userLanguage || window.navigator.language;
+        var langArray = languageStr.split("-"); //simplify "en-us" down to "en"
+        var lang = langArray[0];
+
+        switch (lang) {
+        case "fr":
+                channel = "#francais";
+                break;
+        case "da":
+        case "no":
+        case "se":
+                channel = "#scandinavia";
+                break;
+        case "de":
+                channel = "#deutsch";
+                break;
+        case "nl":
+                channel = "#dutch";
+                break;
+        case "nz":
+                channel = "#kiwi";
+                break;
+        case "pl":
+                channel = "#polish";
+                break;
+        case "it":
+                channel = "#italiano";
+                break;
+        case "hr":
+                channel = "#croatian";
+                break;
+        case "pt":
+                channel = "#portugues";
+                break;
+        case "zh":
+                channel = "#chinese";
+                break;
+        case "es":
+                channel = "#espanol";
+                break;
+        case "fi":
+                channel = "#suomi";
+                break;
+        case "ru":
+                channel = "#russian";
+                break;
+        case "id":
+                channel = "#indonesian";
+                break;
+        case "is":
+                channel = "#icelandic";
+                break;
+        case "ar":
+                channel = "#arabics";
+                break;
+        case "ro":
+                channel = "#romanian";
+                break;
+        case "en":
+                channel = "#english";
+                break;
+        default:
+                channel = "#international";
+        }
+
+document.getElementById("connect:channels").value = channel;
+
+        }
+        </script>
 
 	<div id="wrap">
 	<div id="viewport">
@@ -126,8 +202,8 @@
 								<h1 class="title">
 									Welcome to ScoutLink Webchat!
 								</h1>
-							<p>Please select a name below by typing in the nick box! We'll append some random numbers if your chosen nick has already been taken. 
-							</p><p>Please ensure you have read the <a href="https://scoutlink.net/rules">ScoutLink rules</a>.</p></p><p>
+							<p>Please select a name below by typing in the nick box! We'll append some random numbers if your chosen nick has already been taken. Please ensure you have
+							read the <a href="https://scoutlink.net/rules">ScoutLink rules</a>.</p><p>
 							
 							<a href="https://scoutlink.net/rules">Rules</a> &bull; <a href="https://www.scoutlink.net/coordinators/">Staff</a> &bull; <a href="https://volunteer.scoutlink.net">JOTI Volunteer Applications</a></p>
 							</div>
@@ -196,26 +272,25 @@
 							</div>
 							{{/unless}}
 							<div class="col-sm-3">
-							<p><label for="connect:channels">Channel selection</label></p></div>
-
-							<div class="col-sm-9">
-
-                                                        <select name="join" id="connect:channels" class="channellist">
-                                                                <option value="#english">#english</option>
-                                                                <option value="#minecraft">#minecraft</option>
-                                                                <option value="#help">#help</option>
-                                                                <option value="#arabics">#arabics</option>
-                                                                <option value="#deutsch">#deutsch</option>
-                                                                <option value="#dutch">#dutch</option>
-                                                                <option value="#espanol">#espanol</option>
-                                                                <option value="#francais">#francais</option>
-                                                                <option value="#indonesian">#indonesian</option>
-                                                                <option value="#scandinavia">#scandinavia</option>
-                                                                <option value="#suomi">#suomi</option>
-                                                                <option value="#uno">#uno</option>
-                                                        </select><p>
-							<i>Select a channel from the list above. You can join other channels by using the /join command.</i>
+								<p><label for="connect:channels">Channels</label></p>
+							<div class="channels"><p>Available channels (click to select): 
+								<b><a href="javascript:;" onclick="var channel = '#english'; document.getElementById('connect:channels').value = channel;">#english</a>,</b>
+								<b><a href="javascript:;" onclick="var channel = '#minecraft'; document.getElementById('connect:channels').value = channel;">#minecraft</a>,</b>
+								<b><a href="javascript:;" onclick="var channel = '#help'; document.getElementById('connect:channels').value = channel;">#help</a>,</b>
+								<a href="javascript:;" onclick="var channel = '#arabics'; document.getElementById('connect:channels').value = channel;">#arabics</a>, 
+								<a href="javascript:;" onclick="var channel = '#deutsch'; document.getElementById('connect:channels').value = channel;">#deutsch,</a> 
+								<a href="javascript:;" onclick="var channel = '#dutch'; document.getElementById('connect:channels').value = channel;">#dutch,</a> 
+								<a href="javascript:;" onclick="var channel = '#espanol'; document.getElementById('connect:channels').value = channel;">#espanol,</a> 
+								<a href="javascript:;" onclick="var channel = '#francais'; document.getElementById('connect:channels').value = channel;">#francais,</a> 
+								<a href="javascript:;" onclick="var channel = '#indonesian'; document.getElementById('connect:channels').value = channel;">#indonesian,</a> 
+								<a href="javascript:;" onclick="var channel = '#scandinavia'; document.getElementById('connect:channels').value = channel;">#scandinavia,</a> 
+								<a href="javascript:;" onclick="var channel = '#suomi'; document.getElementById('connect:channels').value = channel;">#suomi,</a> 
+								<a href="javascript:;" onclick="var channel = '#esperanto'; document.getElementById('connect:channels').value = channel;">#esperanto</a>
 							</p></div>
+							</div>
+							<div class="col-sm-9">
+								<input class="input" id="connect:channels" name="join" value="{{defaults.join}}">
+							</div>
 							<div class="col-sm-9 col-sm-offset-3">
 								<button type="submit" class="btn">Connect</button>
 							</div>

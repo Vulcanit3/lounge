@@ -22,7 +22,7 @@ module.exports = function(irc, network) {
 		var lobby = network.channels[0];
 		var msg = new Msg({
 			type: Msg.Type.ERROR,
-			text: data.nick + ": " + (data.reason || "Nickname is already in use."),
+			text: data.nick + ": " + (data.reason || "Nickname is already in use. This is normal, assigning you a new one..."),
 		});
 		lobby.pushMessage(client, msg, true);
 

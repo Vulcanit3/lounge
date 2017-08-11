@@ -12,15 +12,15 @@ const chat = $("#chat");
 const options = $.extend({
 	coloredNicks: true,
 	desktopNotifications: false,
-	join: true,
+	join: false,
 	links: true,
 	mode: true,
 	motd: true,
 	nick: true,
 	notification: true,
 	notifyAllMessages: false,
-	part: true,
-	quit: true,
+	part: false,
+	quit: false,
 	showSeconds: false,
 	theme: $("#theme").attr("href").replace(/^themes\/(.*).css$/, "$1"), // Extracts default theme name, set on the server configuration
 	thumbnails: true,

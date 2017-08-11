@@ -3,7 +3,8 @@
 var Chan = require("../../models/chan");
 var Msg = require("../../models/msg");
 
-exports.commands = ["slap", "me"];
+//exports.commands = ["slap", "me"];
+exports.commands = ["me"];
 
 exports.input = function(network, chan, cmd, args) {
 	if (chan.type !== Chan.Type.CHANNEL && chan.type !== Chan.Type.QUERY) {
@@ -19,8 +20,8 @@ exports.input = function(network, chan, cmd, args) {
 	var text;
 
 	switch (cmd) {
-	case "slap":
-		text = "slaps " + args[0] + " around a bit with a large trout";
+/*	case "slap":
+		text = "slaps " + args[0] + " around a bit with a large trout";*/
 		/* fall through */
 	case "me":
 		if (args.length === 0) {

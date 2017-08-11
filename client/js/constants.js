@@ -49,7 +49,7 @@ const commands = [
 	"/say",
 	"/send",
 	"/server",
-	"/slap",
+//	"/slap",
 	"/topic",
 	"/unban",
 	"/voice",
