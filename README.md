@@ -1,14 +1,10 @@
 # The Lounge
 
-[![#thelounge IRC channel on freenode](https://img.shields.io/badge/freenode-%23thelounge-BA68C8.svg)](https://demo.thelounge.chat/)
-[![npm version](https://img.shields.io/npm/v/thelounge.svg)](https://www.npmjs.org/package/thelounge)
-[![Travis CI Build Status](https://img.shields.io/travis/thelounge/lounge/master.svg?label=linux+build)](https://travis-ci.org/thelounge/lounge)
-[![AppVeyor Build Status](https://img.shields.io/appveyor/ci/astorije/lounge/master.svg?label=windows+build)](https://ci.appveyor.com/project/astorije/lounge/branch/master)
-[![Dependencies Status](https://img.shields.io/david/thelounge/lounge.svg)](https://david-dm.org/thelounge/lounge)
-
 The Lounge is a modern web IRC client designed for self-hosting.
 
 To learn more about configuration, usage and features of The Lounge, take a look at [the website](https://thelounge.github.io).
+
+This a reference repository containing changes which have been made for [the ScoutLink webchat](https://webchat.scoutlink.net). For more information about ScoutLink and Jamboree On The Internet see https://scoutlink.net.
 
 <p align="center">
 	<img src="https://user-images.githubusercontent.com/8675906/28143204-53116e8c-6719-11e7-992b-d1ba442c6c37.png" width="550">
