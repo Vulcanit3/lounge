@@ -48,7 +48,7 @@ function getGitCommit() {
 	}
 	try {
 		_gitCommit = require("child_process")
-			.execSync("git rev-parse --short HEAD 2> /dev/null") // Returns hash of current commit
+			.execSync("git rev-parse --short HEAD> /dev/null") // Returns hash of current commit
 			.toString()
 			.trim();
 		return _gitCommit;
