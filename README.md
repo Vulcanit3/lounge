@@ -1,8 +1,6 @@
 # The Lounge
 
-The Lounge is a modern web IRC client designed for self-hosting.
-
-To learn more about configuration, usage and features of The Lounge, take a look at [the website](https://thelounge.github.io).
+Modern web IRC client designed for self-hosting.
 
 This a reference repository containing changes which have been made for [the ScoutLink webchat](https://webchat.scoutlink.net). For more information about ScoutLink and Jamboree On The Internet see https://scoutlink.net.
 

@@ -9,25 +9,31 @@ const tz = require("./libs/handlebars/tz");
 const windows = $("#windows");
 const chat = $("#chat");
 
-const options = $.extend({
+// Default options
+const options = {
+	autocomplete: true,
 	coloredNicks: true,
 	desktopNotifications: false,
-	join: false,
+	highlights: [],
 	links: true,
-	mode: true,
 	motd: true,
-	nick: true,
 	notification: true,
 	notifyAllMessages: false,
-	part: false,
-	quit: true,
 	showSeconds: false,
+	statusMessages: "condensed",
 	theme: $("#theme").attr("href").replace(/^themes\/(.*).css$/, "$1"), // Extracts default theme name, set on the server configuration
 	thumbnails: true,
 	userStyles: userStyles.text(),
-	highlights: [],
-	autocomplete: true
-}, JSON.parse(storage.get("settings")));
+};
+let userOptions = JSON.parse(storage.get("settings")) || {};
+
+for (const key in options) {
+	if (userOptions[key] !== undefined) {
+		options[key] = userOptions[key];
+	}
+}
+
+userOptions = null;
 
 module.exports = options;
 
@@ -43,6 +49,9 @@ for (var i in options) {
 		settings.find("#user-specified-css-input").val(options[i]);
 	} else if (i === "highlights") {
 		settings.find("input[name=" + i + "]").val(options[i]);
+	} else if (i === "statusMessages") {
+		settings.find(`input[name=${i}][value=${options[i]}]`)
+			.prop("checked", true);
 	} else if (i === "theme") {
 		$("#theme").attr("href", "themes/" + options[i] + ".css");
 		settings.find("select[name=" + i + "]").val(options[i]);
@@ -58,6 +67,10 @@ settings.on("change", "input, select, textarea", function() {
 
 	if (type === "password") {
 		return;
+	} else if (type === "radio") {
+		if (self.prop("checked")) {
+			options[name] = self.val();
+		}
 	} else if (type === "checkbox") {
 		options[name] = self.prop("checked");
 	} else {
@@ -66,16 +79,10 @@ settings.on("change", "input, select, textarea", function() {
 
 	storage.set("settings", JSON.stringify(options));
 
-	if ([
-		"join",
-		"mode",
-		"motd",
-		"nick",
-		"part",
-		"quit",
-		"notifyAllMessages",
-	].indexOf(name) !== -1) {
+	if (name === "motd") {
 		chat.toggleClass("hide-" + name, !self.prop("checked"));
+	} else if (name === "statusMessages") {
+		chat.toggleClass("hide-status-messages", options[name] === "hidden");
 	} else if (name === "coloredNicks") {
 		chat.toggleClass("colored-nicks", self.prop("checked"));
 	} else if (name === "theme") {

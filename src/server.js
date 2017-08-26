@@ -17,7 +17,6 @@ const net = require("net");
 const Identification = require("./identification");
 
 var manager = null;
-var authFunction = localAuth;
 
 module.exports = function() {
 	log.info(`The Lounge ${colors.green(Helper.getVersion())} \
@@ -94,10 +93,6 @@ module.exports = function() {
 in ${config.public ? "public" : "private"} mode`);
 	});
 
-	if (!config.public && (config.ldap || {}).enable) {
-		authFunction = ldapAuth;
-	}
-
 	var sockets = io(server, {
 		serveClient: false,
 		transports: config.transports
@@ -105,9 +100,10 @@ in ${config.public ? "public" : "private"} mode`);
 
 	sockets.on("connect", function(socket) {
 		if (config.public) {
-			auth.call(socket);
+			performAuthentication.call(socket, {});
 		} else {
-			init(socket);
+			socket.emit("auth", {success: true});
+			socket.on("auth", performAuthentication);
 		}
 	});
 
@@ -178,156 +174,181 @@ function index(req, res, next) {
 	res.render("index", data);
 }
 
-function init(socket, client) {
-	if (!client) {
-		socket.emit("auth", {success: true});
-		socket.on("auth", auth);
-	} else {
-		socket.emit("authorized");
+function initializeClient(socket, client, generateToken, token) {
+	socket.emit("authorized");
 
-		client.ip = getClientIp(socket.request);
+	socket.on("disconnect", function() {
+		client.clientDetach(socket.id);
+	});
+	client.clientAttach(socket.id);
 
-		socket.on("disconnect", function() {
-			client.clientDetach(socket.id);
-		});
-		client.clientAttach(socket.id);
-
-		socket.on(
-			"input",
-			function(data) {
-				client.input(data);
-			}
-		);
-		socket.on(
-			"more",
-			function(data) {
-				client.more(data);
-			}
-		);
-		socket.on(
-			"conn",
-			function(data) {
-				// prevent people from overriding webirc settings
-				data.ip = null;
-				data.hostname = null;
-				client.connect(data);
-			}
-		);
-		if (!Helper.config.public && !Helper.config.ldap.enable) {
-			socket.on(
-				"change-password",
-				function(data) {
-					var old = data.old_password;
-					var p1 = data.new_password;
-					var p2 = data.verify_password;
-					if (typeof p1 === "undefined" || p1 === "") {
-						socket.emit("change-password", {
-							error: "Please enter a new password"
-						});
-						return;
-					}
-					if (p1 !== p2) {
-						socket.emit("change-password", {
-							error: "Both new password fields must match"
-						});
-						return;
-					}
-
-					Helper.password
-						.compare(old || "", client.config.password)
-						.then((matching) => {
-							if (!matching) {
-								socket.emit("change-password", {
-									error: "The current password field does not match your account password"
-								});
-								return;
-							}
-							const hash = Helper.password.hash(p1);
-
-							client.setPassword(hash, (success) => {
-								const obj = {};
-
-								if (success) {
-									obj.success = "Successfully updated your password, all your other sessions were logged out";
-									obj.token = client.config.token;
-								} else {
-									obj.error = "Failed to update your password";
-								}
-
-								socket.emit("change-password", obj);
-							});
-						}).catch((error) => {
-							log.error(`Error while checking users password. Error: ${error}`);
-						});
-				}
-			);
+	socket.on(
+		"input",
+		function(data) {
+			client.input(data);
 		}
+	);
+
+	socket.on(
+		"more",
+		function(data) {
+			client.more(data);
+		}
+	);
+
+	socket.on(
+		"conn",
+		function(data) {
+			// prevent people from overriding webirc settings
+			data.ip = null;
+			data.hostname = null;
+
+			client.connect(data);
+		}
+	);
+
+	if (!Helper.config.public && !Helper.config.ldap.enable) {
 		socket.on(
-			"open",
+			"change-password",
 			function(data) {
-				client.open(socket.id, data);
+				var old = data.old_password;
+				var p1 = data.new_password;
+				var p2 = data.verify_password;
+				if (typeof p1 === "undefined" || p1 === "") {
+					socket.emit("change-password", {
+						error: "Please enter a new password"
+					});
+					return;
+				}
+				if (p1 !== p2) {
+					socket.emit("change-password", {
+						error: "Both new password fields must match"
+					});
+					return;
+				}
+
+				Helper.password
+					.compare(old || "", client.config.password)
+					.then((matching) => {
+						if (!matching) {
+							socket.emit("change-password", {
+								error: "The current password field does not match your account password"
+							});
+							return;
+						}
+						const hash = Helper.password.hash(p1);
+
+						client.setPassword(hash, (success) => {
+							const obj = {};
+
+							if (success) {
+								obj.success = "Successfully updated your password";
+							} else {
+								obj.error = "Failed to update your password";
+							}
+
+							socket.emit("change-password", obj);
+						});
+					}).catch((error) => {
+						log.error(`Error while checking users password. Error: ${error}`);
+					});
 			}
 		);
-		socket.on(
-			"sort",
-			function(data) {
-				client.sort(data);
-			}
-		);
-		socket.on(
-			"names",
-			function(data) {
-				client.names(data);
-			}
-		);
+	}
 
-		socket.on("msg:preview:toggle", function(data) {
-			const networkAndChan = client.find(data.target);
-			if (!networkAndChan) {
-				return;
-			}
+	socket.on(
+		"open",
+		function(data) {
+			client.open(socket.id, data);
+		}
+	);
 
-			const message = networkAndChan.chan.findMessage(data.msgId);
+	socket.on(
+		"sort",
+		function(data) {
+			client.sort(data);
+		}
+	);
 
-			if (!message) {
-				return;
-			}
+	socket.on(
+		"names",
+		function(data) {
+			client.names(data);
+		}
+	);
 
-			const preview = message.findPreview(data.link);
+	socket.on("msg:preview:toggle", function(data) {
+		const networkAndChan = client.find(data.target);
+		if (!networkAndChan) {
+			return;
+		}
 
-			if (preview) {
-				preview.shown = data.shown;
+		const message = networkAndChan.chan.findMessage(data.msgId);
+
+		if (!message) {
+			return;
+		}
+
+		const preview = message.findPreview(data.link);
+
+		if (preview) {
+			preview.shown = data.shown;
+		}
+	});
+
+	socket.on("sign-out", () => {
+		delete client.config.sessions[token];
+
+		client.manager.updateUser(client.name, {
+			sessions: client.config.sessions
+		}, (err) => {
+			if (err) {
+				log.error("Failed to update sessions for", client.name, err);
 			}
 		});
 
-		socket.join(client.id);
+		socket.emit("sign-out");
+	});
+
+	socket.join(client.id);
+
+	const sendInitEvent = (tokenToSend) => {
 		socket.emit("init", {
 			active: client.lastActiveChannel,
 			networks: client.networks,
-			token: client.config.token || null
+			token: tokenToSend
 		});
+	};
+
+	if (generateToken) {
+		client.generateToken((newToken) => {
+			token = newToken;
+
+			client.updateSession(token, getClientIp(socket.request), socket.request);
+
+			client.manager.updateUser(client.name, {
+				sessions: client.config.sessions
+			}, (err) => {
+				if (err) {
+					log.error("Failed to update sessions for", client.name, err);
+				}
+			});
+
+			sendInitEvent(token);
+		});
+	} else {
+		sendInitEvent(null);
 	}
 }
 
-function reverseDnsLookup(socket, client) {
-	client.ip = getClientIp(socket.request);
-
-	dns.reverse(client.ip, function(err, host) {
-		if (!err && host.length) {
-			client.hostname = host[0];
-		} else {
-			client.hostname = client.ip;
-		}
-
-		init(socket, client);
-	});
-}
-
 function localAuth(client, user, password, callback) {
+	// If no user is found, or if the client has not provided a password,
+	// fail the authentication straight away
 	if (!client || !password) {
 		return callback(false);
 	}
 
+	// If this user has no password set, fail the authentication
 	if (!client.config.password) {
 		log.error(`User ${colors.bold(user)} with no local password set tried to sign in. (Probably a LDAP user)`);
 		return callback(false);
@@ -345,6 +366,7 @@ function localAuth(client, user, password, callback) {
 					}
 				});
 			}
+
 			callback(matching);
 		}).catch((error) => {
 			log.error(`Error while checking users password. Error: ${error}`);
@@ -375,51 +397,82 @@ function ldapAuth(client, user, password, callback) {
 	});
 }
 
-function auth(data) {
-	var socket = this;
-	var client;
+function performAuthentication(data) {
+	const socket = this;
+	let client;
+
+	const finalInit = () => initializeClient(socket, client, !!data.remember, data.token || null);
+
+	const initClient = () => {
+		client.ip = getClientIp(socket.request);
+
+		// If webirc is enabled perform reverse dns lookup
+		if (Helper.config.webirc === null) {
+			return finalInit();
+		}
+
+		reverseDnsLookup(client.ip, (hostname) => {
+			client.hostname = hostname;
+
+			finalInit();
+		});
+	};
+
 	if (Helper.config.public) {
 		client = new Client(manager);
 		manager.clients.push(client);
+
 		socket.on("disconnect", function() {
 			manager.clients = _.without(manager.clients, client);
 			client.quit();
 		});
-		if (Helper.config.webirc) {
-			reverseDnsLookup(socket, client);
-		} else {
-			init(socket, client);
-		}
-	} else {
-		client = manager.findClient(data.user, data.token);
-		var signedIn = data.token && client && data.token === client.config.token;
-		var token;
 
-		if (client && (data.remember || data.token)) {
-			token = client.config.token;
-		}
+		initClient();
 
-		var authCallback = function(success) {
-			if (success) {
-				if (!client) {
-					// LDAP just created a user
-					manager.loadUser(data.user);
-					client = manager.findClient(data.user);
-				}
-				if (Helper.config.webirc !== null && !client.config.ip) {
-					reverseDnsLookup(socket, client);
-				} else {
-					init(socket, client, token);
-				}
-			} else {
-				socket.emit("auth", {success: success});
-			}
-		};
-
-		if (signedIn) {
-			authCallback(true);
-		} else {
-			authFunction(client, data.user, data.password, authCallback);
-		}
+		return;
 	}
+
+	const authCallback = (success) => {
+		// Authorization failed
+		if (!success) {
+			socket.emit("auth", {success: false});
+			return;
+		}
+
+		// If authorization succeeded but there is no loaded user,
+		// load it and find the user again (this happens with LDAP)
+		if (!client) {
+			manager.loadUser(data.user);
+			client = manager.findClient(data.user);
+		}
+
+		initClient();
+	};
+
+	client = manager.findClient(data.user);
+
+	// We have found an existing user and client has provided a token
+	if (client && data.token && typeof client.config.sessions[data.token] !== "undefined") {
+		client.updateSession(data.token, getClientIp(socket.request), socket.request);
+
+		authCallback(true);
+		return;
+	}
+
+	// Perform password checking
+	if (!Helper.config.public && Helper.config.ldap.enable) {
+		ldapAuth(client, data.user, data.password, authCallback);
+	} else {
+		localAuth(client, data.user, data.password, authCallback);
+	}
+}
+
+function reverseDnsLookup(ip, callback) {
+	dns.reverse(ip, (err, hostnames) => {
+		if (!err && hostnames.length) {
+			return callback(hostnames[0]);
+		}
+
+		callback(ip);
+	});
 }

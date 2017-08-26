@@ -20,14 +20,19 @@ socket.on("msg", function(data) {
 	}
 
 	const msg = render.buildChatMessage(data);
-	const container = chan.find(".messages");
+	const targetId = data.chan;
+//	const target = "#chan-" + targetId;
+	const channel = chat.find(target);
+	const container = channel.find(".messages");
+
+	const activeChannelId = chat.find(".chan.active").data("id");
 
 	if (data.msg.type === "channel_list" || data.msg.type === "ban_list") {
 		$(container).empty();
 	}
 
 	// Check if date changed
-	const prevMsg = $(container.find(".msg")).last();
+	let prevMsg = $(container.find(".msg")).last();
 	const prevMsgTime = new Date(prevMsg.attr("data-time"));
 	const msgTime = new Date(msg.attr("data-time"));
 
@@ -37,17 +42,26 @@ socket.on("msg", function(data) {
 	}
 
 	if (prevMsgTime.toDateString() !== msgTime.toDateString()) {
+		var parent = prevMsg.parent();
+		if (parent.hasClass("condensed")) {
+			prevMsg = parent;
+		}
 		prevMsg.after(templates.date_marker({msgDate: msgTime}));
 	}
 
 	// Add message to the container
-	container
-		.append(msg)
-		.trigger("msg", [
-			target,
-			data
-		])
-		.trigger("keepToBottom");
+	render.appendMessage(
+		container,
+		data.chan,
+		$(target).attr("data-type"),
+		data.msg.type,
+		msg
+	);
+
+	container.trigger("msg", [
+		target,
+		data
+	]).trigger("keepToBottom");
 
 	var lastVisible = container.find("div:visible").last();
 	if (data.msg.self
@@ -59,14 +73,16 @@ socket.on("msg", function(data) {
 			.appendTo(container);
 	}
 
-	if ((data.msg.type === "message" || data.msg.type === "action") && chan.hasClass("channel")) {
-		const nicks = chan.find(".users").data("nicks");
-		if (nicks) {
-			const find = nicks.indexOf(data.msg.from);
-			if (find !== -1) {
-				nicks.splice(find, 1);
-				nicks.unshift(data.msg.from);
+	// Message arrived in a non active channel, trim it to 100 messages
+	if (activeChannelId !== targetId && container.find(".msg").slice(0, -100).remove().length) {
+		channel.find(".show-more").addClass("show");
+
+		// Remove date-seperators that would otherwise
+		// be "stuck" at the top of the channel
+		channel.find(".date-marker-container").each(function() {
+			if ($(this).next().hasClass("date-marker-container")) {
+				$(this).remove();
 			}
-		}
+		});
 	}
 });

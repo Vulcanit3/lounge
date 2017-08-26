@@ -439,6 +439,10 @@ $(function() {
 		}
 	});
 
+	chat.on("click", ".condensed-text", function() {
+		$(this).closest(".msg.condensed").toggleClass("closed");
+	});
+
 	chat.on("click", ".user", function() {
 		var name = $(this).data("name");
 		var chan = findCurrentNetworkChan(name);
@@ -562,8 +566,12 @@ $(function() {
 	});
 
 	sidebar.on("click", "#sign-out", function() {
+		socket.emit("sign-out");
 		storage.remove("token");
-		location.reload();
+
+		if (!socket.connected) {
+			location.reload();
+		}
 	});
 
 	sidebar.on("click", ".close", function() {
@@ -703,8 +711,15 @@ $(function() {
 	chat.on("click", ".show-more-button", function() {
 		var self = $(this);
 		var lastMessage = self.parent().next(".messages").children(".msg").first();
+		if (lastMessage.is(".condensed")) {
+			lastMessage = lastMessage.children(".msg").first();
+		}
 		var lastMessageId = parseInt(lastMessage[0].id.replace("msg-", ""), 10);
-		self.prop("disabled", true);
+
+		self
+			.text("Loading older messages…")
+			.prop("disabled", true);
+
 		socket.emit("more", {
 			target: self.data("id"),
 			lastId: lastMessageId
@@ -900,23 +915,6 @@ $(function() {
 			});
 		}
 	}());
-
-	setInterval(function() {
-		chat.find(".chan:not(.active)").each(function() {
-			var chan = $(this);
-			if (chan.find(".messages .msg").slice(0, -100).remove().length) {
-				chan.find(".show-more").addClass("show");
-
-				// Remove date-seperators that would otherwise be "stuck" at the top
-				// of the channel
-				chan.find(".date-marker-container").each(function() {
-					if ($(this).next().hasClass("date-marker-container")) {
-						$(this).remove();
-					}
-				});
-			}
-		});
-	}, 1000 * 10);
 
 	function completeNicks(word) {
 		const users = chat.find(".active .users");
