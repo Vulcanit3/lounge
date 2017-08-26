@@ -7,7 +7,6 @@ const chat = $("#chat");
 const templates = require("../../views");
 
 socket.on("more", function(data) {
-	const documentFragment = render.buildChannelMessages(data);
 	const chan = chat
 		.find("#chan-" + data.chan)
 		.find(".messages");
@@ -15,6 +14,12 @@ socket.on("more", function(data) {
 	// get the scrollable wrapper around messages
 	const scrollable = chan.closest(".chat");
 	const heightOld = chan.height();
+
+	// If there are no more messages to show, just hide the button and do nothing else
+	if (!data.messages.length) {
+		scrollable.find(".show-more").removeClass("show");
+		return;
+	}
 
 	// Remove the date-change marker we put at the top, because it may
 	// not actually be a date change now
@@ -29,6 +34,7 @@ socket.on("more", function(data) {
 	}
 
 	// Add the older messages
+	const documentFragment = render.buildChannelMessages(data);
 	chan.prepend(documentFragment).end();
 
 	// restore scroll position
@@ -40,7 +46,7 @@ socket.on("more", function(data) {
 	}
 
 	// Date change detect
-	// Have to use data instaid of the documentFragment because it's being weird
+	// Have to use data instead of the documentFragment because it's being weird
 	let lastDate;
 	$(data.messages).each(function() {
 		const msgData = this;

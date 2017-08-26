@@ -89,28 +89,32 @@ module.exports = function() {
 	}, () => {
 		const protocol = config.https.enable ? "https" : "http";
 		var address = server.address();
-		log.info(`Available on ${colors.green(protocol + "://" + address.address + ":" + address.port + "/")} \
-in ${config.public ? "public" : "private"} mode`);
-	});
 
-	var sockets = io(server, {
-		serveClient: false,
-		transports: config.transports
-	});
+		log.info(
+			"Available at " +
+			colors.green(`${protocol}://${address.address}:${address.port}/`) +
+			` in ${colors.bold(config.public ? "public" : "private")} mode`
+		);
 
-	sockets.on("connect", function(socket) {
-		if (config.public) {
-			performAuthentication.call(socket, {});
-		} else {
-			socket.emit("auth", {success: true});
-			socket.on("auth", performAuthentication);
-		}
-	});
+		const sockets = io(server, {
+			serveClient: false,
+			transports: config.transports
+		});
 
-	manager = new ClientManager();
+		sockets.on("connect", (socket) => {
+			if (config.public) {
+				performAuthentication.call(socket, {});
+			} else {
+				socket.emit("auth", {success: true});
+				socket.on("auth", performAuthentication);
+			}
+		});
 
-	new Identification((identHandler) => {
-		manager.init(identHandler, sockets);
+		manager = new ClientManager();
+
+		new Identification((identHandler) => {
+			manager.init(identHandler, sockets);
+		});
 	});
 };
 
@@ -180,7 +184,7 @@ function initializeClient(socket, client, generateToken, token) {
 	socket.on("disconnect", function() {
 		client.clientDetach(socket.id);
 	});
-	client.clientAttach(socket.id);
+	client.clientAttach(socket.id, token);
 
 	socket.on(
 		"input",
@@ -296,6 +300,31 @@ function initializeClient(socket, client, generateToken, token) {
 		}
 	});
 
+	socket.on("push:register", (subscription) => {
+		if (!client.isRegistered() || !client.config.sessions[token]) {
+			return;
+		}
+
+		const registration = client.registerPushSubscription(client.config.sessions[token], subscription);
+
+		if (registration) {
+			client.manager.webPush.pushSingle(client, registration, {
+				type: "notification",
+				timestamp: Date.now(),
+				title: "The Lounge",
+				body: "🚀 Push notifications have been enabled"
+			});
+		}
+	});
+
+	socket.on("push:unregister", () => {
+		if (!client.isRegistered()) {
+			return;
+		}
+
+		client.unregisterPushSubscription(token);
+	});
+
 	socket.on("sign-out", () => {
 		delete client.config.sessions[token];
 
@@ -314,6 +343,8 @@ function initializeClient(socket, client, generateToken, token) {
 
 	const sendInitEvent = (tokenToSend) => {
 		socket.emit("init", {
+			applicationServerKey: manager.webPush.vapidKeys.publicKey,
+			pushSubscription: client.config.sessions[token],
 			active: client.lastActiveChannel,
 			networks: client.networks,
 			token: tokenToSend

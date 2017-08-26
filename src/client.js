@@ -94,10 +94,20 @@ function Client(manager, name, config) {
 		client.config.sessions = {};
 	}
 
+	_.forOwn(client.config.sessions, (session) => {
+		if (session.pushSubscription) {
+			this.registerPushSubscription(session, session.pushSubscription, true);
+		}
+	});
+
 	if (client.name) {
 		log.info(`User ${colors.bold(client.name)} loaded`);
 	}
 }
+
+Client.prototype.isRegistered = function() {
+	return this.name.length > 0;
+};
 
 Client.prototype.emit = function(event, data) {
 	if (this.sockets !== null) {
@@ -310,11 +320,11 @@ Client.prototype.updateSession = function(token, ip, request) {
 		friendlyAgent += ` on ${agent.os.name} ${agent.os.version}`;
 	}
 
-	client.config.sessions[token] = {
+	client.config.sessions[token] = _.assign({
 		lastUse: Date.now(),
 		ip: ip,
 		agent: friendlyAgent,
-	};
+	}, client.config.sessions[token]);
 };
 
 Client.prototype.setPassword = function(hash, callback) {
@@ -393,14 +403,19 @@ Client.prototype.inputLine = function(data) {
 };
 
 Client.prototype.more = function(data) {
-	var client = this;
-	var target = client.find(data.target);
+	const client = this;
+	const target = client.find(data.target);
+
 	if (!target) {
 		return;
 	}
-	var chan = target.chan;
-	var index = chan.messages.findIndex((val) => val.id === data.lastId);
-	var messages = chan.messages.slice(Math.max(0, index - 100), index);
+
+	const chan = target.chan;
+	const index = chan.messages.findIndex((val) => val.id === data.lastId);
+
+	// If we don't find the requested message, send an empty array
+	const messages = index > 0 ? chan.messages.slice(Math.max(0, index - 100), index) : [];
+
 	client.emit("more", {
 		chan: chan.id,
 		messages: messages
@@ -410,7 +425,7 @@ Client.prototype.more = function(data) {
 Client.prototype.open = function(socketId, target) {
 	// Opening a window like settings
 	if (target === null) {
-		this.attachedClients[socketId] = -1;
+		this.attachedClients[socketId].openChannel = -1;
 		return;
 	}
 
@@ -423,7 +438,7 @@ Client.prototype.open = function(socketId, target) {
 	target.chan.unread = 0;
 	target.chan.highlight = false;
 
-	this.attachedClients[socketId] = target.chan.id;
+	this.attachedClients[socketId].openChannel = target.chan.id;
 	this.lastActiveChannel = target.chan.id;
 
 	this.emit("open", target.chan.id);
@@ -493,7 +508,7 @@ Client.prototype.quit = function() {
 	});
 };
 
-Client.prototype.clientAttach = function(socketId) {
+Client.prototype.clientAttach = function(socketId, token) {
 	var client = this;
 	var save = false;
 
@@ -507,7 +522,10 @@ Client.prototype.clientAttach = function(socketId) {
 		});
 	}
 
-	client.attachedClients[socketId] = client.lastActiveChannel;
+	client.attachedClients[socketId] = {
+		token: token,
+		openChannel: client.lastActiveChannel
+	};
 
 	// Update old networks to store ip and hostmask
 	client.networks.forEach((network) => {
@@ -545,6 +563,40 @@ Client.prototype.clientDetach = function(socketId) {
 			}
 		});
 	}
+};
+
+Client.prototype.registerPushSubscription = function(session, subscription, noSave) {
+	if (!_.isPlainObject(subscription) || !_.isPlainObject(subscription.keys)
+	|| typeof subscription.endpoint !== "string" || !/^https?:\/\//.test(subscription.endpoint)
+	|| typeof subscription.keys.p256dh !== "string" || typeof subscription.keys.auth !== "string") {
+		session.pushSubscription = null;
+		return;
+	}
+
+	const data = {
+		endpoint: subscription.endpoint,
+		keys: {
+			p256dh: subscription.keys.p256dh,
+			auth: subscription.keys.auth
+		}
+	};
+
+	session.pushSubscription = data;
+
+	if (!noSave) {
+		this.manager.updateUser(this.name, {
+			sessions: this.config.sessions
+		});
+	}
+
+	return data;
+};
+
+Client.prototype.unregisterPushSubscription = function(token) {
+	this.config.sessions[token].pushSubscription = null;
+	this.manager.updateUser(this.name, {
+		sessions: this.config.sessions
+	});
 };
 
 Client.prototype.save = _.debounce(function SaveClient() {
