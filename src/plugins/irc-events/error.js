@@ -27,7 +27,8 @@ module.exports = function(irc, network) {
 		lobby.pushMessage(client, msg, true);
 
 		if (irc.connection.registered === false) {
-			var random = (data.nick || irc.user.nick) + Math.floor(10 + (Math.random() * 89));
+			//var random = (data.nick || irc.user.nick) + Math.floor(10 + (Math.random() * 89));
+			var random = "Chat_Guest_" + Math.floor((Math.random() * 99999) + 9999);
 			irc.changeNick(random);
 		}
 
@@ -46,7 +47,8 @@ module.exports = function(irc, network) {
 		lobby.pushMessage(client, msg, true);
 
 		if (irc.connection.registered === false) {
-			var random = "i" + Math.random().toString(36).substr(2, 10); // 'i' so it never begins with a number
+			//var random = "i" + Math.random().toString(36).substr(2, 10); // 'i' so it never begins with a number
+			var random = "Chat_Guest_" + Math.floor((Math.random() * 99999) + 9999);
 			irc.changeNick(random);
 		}
 

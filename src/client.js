@@ -157,7 +157,8 @@ Client.prototype.connect = function(args) {
 	var config = Helper.config;
 	var client = this;
 
-	var nick = args.nick || "lounge-user";
+	//var nick = args.nick || "lounge-user";
+	var nick = args.nick || "Chat_Guest_" + Math.floor((Math.random() * 99999) + 9999);
 	var webirc = null;
 	var channels = [];
 
