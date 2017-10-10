@@ -12,7 +12,7 @@ const chat = $("#chat");
 
 // Default options
 const options = {
-	autocomplete: true,
+	autocomplete: false,
 	coloredNicks: true,
 	desktopNotifications: false,
 	highlights: [],
