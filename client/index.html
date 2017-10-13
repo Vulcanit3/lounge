@@ -196,27 +196,28 @@
 							<p><label for="connect:channels">Channel selection</label></p></div>
 
 							<div class="col-sm-9">
-
-                                                        <select name="join" id="connect:channels" class="input">
-                                                                <option value="#english">#english</option>
-                                                                <option value="#minecraft">#minecraft</option>
-								<option value="#indonesian">#indonesian</option>
-                                                                <option value="#help">#help</option>
-                                                                <option value="#arabics">#arabics</option>
-                                                                <option value="#deutsch">#deutsch</option>
-                                                                <option value="#dutch">#dutch</option>
-                                                                <option value="#espanol">#espanol</option>
-                                                                <option value="#francais">#francais</option>
-								<option value="#italiano">#italiano</option>
-                                                                <option value="#polish">#polish</option>
-                                                                <option value="#scandinavia">#scandinavia</option>
-                                                                <option value="#suomi">#suomi</option>
-                                                                <option value="#uno">#uno</option>
-								<option value="#esperanto">#esperanto</option>
-								<option value="">Do not join a channel</option>
-                                                        </select><p>
-							<i>Select a channel from the list above. You can join other channels by using the /join command. (eg /join #minecraft)</i>
-							</p></div>
+								<select name="join" id="connect:channels" class="input" value="{{defaults.join}}">
+									<option value="#english">#english</option>
+									<option value="#minecraft">#minecraft</option>
+									<option value="#indonesian">#indonesian</option>
+									<option value="#help">#help</option>
+									<option value="#arabics">#arabics</option>
+									<option value="#deutsch">#deutsch</option>
+									<option value="#dutch">#dutch</option>
+									<option value="#espanol">#espanol</option>
+									<option value="#francais">#francais</option>
+									<option value="#italiano">#italiano</option>
+									<option value="#polish">#polish</option>
+									<option value="#scandinavia">#scandinavia</option>
+									<option value="#suomi">#suomi</option>
+									<option value="#uno">#uno</option>
+									<option value="#esperanto">#esperanto</option>
+									<option value="">Do not join a channel</option>
+								</select>
+								<p>
+									<i>Select a channel from the list above. You can join other channels by using the /join command. (eg /join #minecraft)</i>
+								</p>
+							</div>
 							<div class="col-sm-9 col-sm-offset-3">
 								<button type="submit" class="btn">Connect</button>
 							</div>
