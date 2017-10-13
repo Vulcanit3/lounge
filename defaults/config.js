@@ -102,7 +102,7 @@ module.exports = {
 	// @type     boolean
 	// @default  true
 	//
-	displayNetwork: true,
+	displayNetwork: false,
 
 	//
 	// Lock network
@@ -113,7 +113,7 @@ module.exports = {
 	// @type     boolean
 	// @default  false
 	//
-	lockNetwork: false,
+	lockNetwork: true,
 
 	//
 	// Hex IP

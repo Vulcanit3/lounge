@@ -8,6 +8,8 @@
 	<link rel="preload" as="script" href="js/bundle.vendor.js">
 	<link rel="preload" as="script" href="js/bundle.js">
 	<script src="js/langchoose.js"></script>
+	<script src="js/filesaver.js"></script>
+	<script defer src="js/logging.js"></script>
 	<link rel="stylesheet" href="css/bootstrap.css">
 	<link rel="stylesheet" href="css/style.css">
 	<link id="theme" rel="stylesheet" href="{{ theme }}">
@@ -41,7 +43,9 @@
 			<span class="tooltipped tooltipped-n tooltipped-no-touch" aria-label="Connect to network"><button class="icon connect" data-target="#connect" aria-label="Connect to network"></button></span>
 			<span class="tooltipped tooltipped-n tooltipped-no-touch" aria-label="Client settings"><button class="icon settings" data-target="#settings" aria-label="Client settings"></button></span>
 			<span class="tooltipped tooltipped-n tooltipped-no-touch" aria-label="Help"><button class="icon help" data-target="#help" aria-label="Help"></button></span>
+			<span class="tooltipped tooltipped-n tooltipped-no-touch" aria-label="Download Logs"><button id="download-logs"  class="icon logging"></button></span>
 			<span class="tooltipped tooltipped-n tooltipped-no-touch" aria-label="Sign out"><button class="icon sign-out" id="sign-out" aria-label="Sign out"></button></span>
+
 		</footer>
 		<div id="main">
 			<div id="windows">
